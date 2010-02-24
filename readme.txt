@@ -42,6 +42,6 @@ your_url/?sil_opml
 
 Thanks to
 ---
-Autoritas Consulting, they are the sponsors of this plugino. :)
+Autoritas Consulting, sponsors of this plugin. :)
 <http://www.autoritas.es/>
 
