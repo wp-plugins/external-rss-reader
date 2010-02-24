@@ -38,3 +38,10 @@ Saving OPML:
 
 Your OPML file exported is on:
 your_url/?sil_opml
+
+
+Thanks to
+---
+Autoritas Consulting, they are the sponsors of this plugino. :)
+<http://www.autoritas.es/>
+
