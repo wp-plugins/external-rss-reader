@@ -2,7 +2,7 @@
 by: Byron Herrera - bh at silencesoft dot net
 Contributors: silence
 Donate link: http://www.silencesoft.net/
-Tags: rss, password
+Tags: rss reader, external feed, rss
 Requires at least: 2.0.2
 Tested up to: 2.8
 Stable tag: 0.3
@@ -10,6 +10,9 @@ Stable tag: 0.3
 A plugin to read external rss feeds
 
 == Description ==
+
+This is a plugin that allows read some external rss feeds and show it on a page or in a widget.
+Sites can be categorized and you can add an image or use a gravatar.
 
 Using Plugin:
 ---
