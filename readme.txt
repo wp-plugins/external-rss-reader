@@ -1,13 +1,15 @@
-Silencesoft RSS Reader 0.3
+=== Silencesoft RSS Reader ===
 by: Byron Herrera - bh at silencesoft dot net
-http://www.silencesoft.net
+Contributors: silence
+Donate link: http://www.silencesoft.net/
+Tags: rss, password
+Requires at least: 2.0.2
+Tested up to: 2.8
+Stable tag: 0.3
 
-Installation:
----
+A plugin to read external rss feeds
 
-Upload plugin folder to plugins folder.
-CHmod 777 cache and images folders.
-Change Options as necesary.
+== Description ==
 
 Using Plugin:
 ---
@@ -45,3 +47,11 @@ Thanks to
 Autoritas Consulting, sponsors of this plugin. :)
 <http://www.autoritas.es/>
 
+
+== Installation ==
+
+Upload plugin folder to plugins folder.
+CHmod 777 cache and images folders.
+Change Options as necesary.
+
+== Changelog ==
