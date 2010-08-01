@@ -3,7 +3,7 @@
 Plugin Name: Silencesoft RSS Reader
 Plugin URI: http://www.silencesoft.net
 Description: A plugin to read external rss feeds
-Version: 0.3
+Version: 0.1
 Author: Byron Herrera
 Author URI: http://byronh.axul.net
 
@@ -160,6 +160,8 @@ function sil_rss_install() {
 		add_option("sil_rss_image_size_h", 50, 'no');
 		add_option("sil_rss_image_size_w", 50, 'no');
 		add_option("sil_rss_use_cache", 1, 'no');
+		add_option("sil_rss_show_categories", 1, 'no');
+		add_option("sil_rss_show_feed_url", 1, 'no');
 		
 		// Widget
 		add_option("sil_rss_widget_title", "RSS Feeds", 'no');
@@ -201,25 +203,13 @@ function sil_rss_update() {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	}
 
-	$sql = "CREATE TABLE " . $sil_rss_table_name . " (
-		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		time datetime NOT NULL,
-		name VARCHAR(100) NOT NULL,
-		author VARCHAR(100) NOT NULL,
-		gravatar VARCHAR(255) NOT NULL,
-		image VARCHAR(255) NOT NULL,
-		description VARCHAR(255) NOT NULL,
-		url VARCHAR(150) NOT NULL,
-		link VARCHAR(150) NOT NULL,
-		UNIQUE KEY id (id)
-		);";
-	// echo $sql;
-	dbDelta($sql);
+	add_option("sil_rss_show_categories", 1, 'no');
+	add_option("sil_rss_show_feed_url", 1, 'no');
 	update_option("sil_rss_version", SIL_RSS_VERSION);
 }
 
 add_action('admin_menu', 'sil_rss_update');
-// update to v. 0.3
+// update to v. 0.4
 
 
 function sil_rss_options_page() {
@@ -250,6 +240,20 @@ if (isset($_POST['submitted']) && !empty($_POST['submitted']))
 <td><select name="sil_rss_multiple">
 <option value="1"<?php if (get_option('sil_rss_multiple') == '1') echo ' selected="selected"'; ?>>Yes</option>
 <option value="0"<?php if (get_option('sil_rss_multiple') == '0') echo ' selected="selected"'; ?>>No</option>
+</select></td>
+</tr>
+<tr valign="top">
+<th scope="row"><?php _e('Show categories navigator on page', 'sil_rss'); ?>:</th>
+<td><select name="sil_rss_show_categories">
+<option value="1"<?php if (get_option('sil_rss_show_categories') == '1') echo ' selected="selected"'; ?>>Yes</option>
+<option value="0"<?php if (get_option('sil_rss_show_categories') == '0') echo ' selected="selected"'; ?>>No</option>
+</select></td>
+</tr>
+<tr valign="top">
+<th scope="row"><?php _e('Show feed url on page', 'sil_rss'); ?>:</th>
+<td><select name="sil_rss_show_feed_url">
+<option value="1"<?php if (get_option('sil_rss_show_feed_url') == '1') echo ' selected="selected"'; ?>>Yes</option>
+<option value="0"<?php if (get_option('sil_rss_show_feed_url') == '0') echo ' selected="selected"'; ?>>No</option>
 </select></td>
 </tr>
 <tr valign="top">
@@ -287,7 +291,7 @@ if (isset($_POST['submitted']) && !empty($_POST['submitted']))
 </table>
 
 <input type="hidden" name="action" value="update" />
-<input type="hidden" name="page_options" value="sil_rss_total,sil_rss_multiple,sil_rss_date_format,sil_rss_use_cache,sil_rss_pre_list,sil_rss_html_list,sil_rss_post_list,sil_rss_image_size_h,sil_rss_image_size_w" />
+<input type="hidden" name="page_options" value="sil_rss_total,sil_rss_multiple,sil_rss_date_format,sil_rss_show_categories,sil_rss_show_feed_url,sil_rss_use_cache,sil_rss_pre_list,sil_rss_html_list,sil_rss_post_list,sil_rss_image_size_h,sil_rss_image_size_w" />
 
 <p class="submit">
 <input type="submit" name="Submit" value="<?php _e('Save Changes'); ?>" />
@@ -569,6 +573,7 @@ function sil_rss_manage_page() {
   				<tr>
 					<th scope="col" class="check-column">&nbsp;</th>
 					<th scope="col">&nbsp;</th>
+					<th scope="col">&nbsp;</th>
 					<th scope="col" width="30%"><?php _e('Name', 'sil_rss'); ?></th>
 					<th scope="col"><?php _e('Site Url', 'sil_rss'); ?></th>
 					<th scope="col"><?php _e('Feed Url', 'sil_rss'); ?></th>
@@ -588,6 +593,7 @@ foreach($results as $result)
 ?>
 				  <tr id='rss-<?php echo $result->id; ?>' class='alternate'>
 						<th scope="row" class="check-column"><input type="checkbox" name="eventcheck[]" value="<?php echo $event->id; ?>" /></th>
+						<td><?php echo $result->id; ?></td>
 						<td><?php if (strlen($result->image)) { ?><img src="<?php echo SIL_RSS_URL.'images/'.$result->image; ?>" width="30" height="30" /><?php } 
 						elseif (strlen($result->gravatar)) { ?><?php echo get_avatar($result->gravatar, '30') ?><?php } ?></td>
 						<td><?php echo $result->name; ?></td>
@@ -873,6 +879,13 @@ function sil_rss_uninstall() {
 
 	// Drop MySQL Tables
 	$SQL = "DROP TABLE `".$sil_rss_table_name;
+	mysql_query($SQL) or die("An unexpected error occured.<br />".mysql_error());
+	$sil_rss_table_categories = $wpdb->prefix . "sil_rss_categories";
+	$SQL = "DROP TABLE `".$sil_rss_table_categories;
+	mysql_query($SQL) or die("An unexpected error occured.<br />".mysql_error());
+
+	$sil_rss_table_name_by_category = $wpdb->prefix . "sil_rss_by_category";
+	$SQL = "DROP TABLE `".$sil_rss_table_name_by_category;
 	mysql_query($SQL) or die("An unexpected error occured.<br />".mysql_error());
 
 	// Delete Option
@@ -1455,26 +1468,27 @@ function sil_rss_show($total = 0, $to_show = "content", $category = 0, $html_pre
 
 	$catHtml = '';
 	if ($to_show == "content") {
-		$sql = "SELECT * FROM ".SIL_RSS_TABLE_CATEGORIES;
-   	$catHtml = '<div id="sil_navigation">'."\n";
-   	$catHtml .= '<div id="sil_cat_list">'."\n";
-		$catHtml .= '<select name="sil_categories" id="sil_categories"
-		 onchange="location.href=document.getElementById(\'sil_categories\').options[selectedIndex].value">'."\n";
-		$results = $wpdb->get_results($sql);
-		if (strpos($_SERVER["REQUEST_URI"], "?")) {
-			$site_url = $_SERVER['PHP_SELF']."?";
-			foreach ($_GET as $key => $value) {
-				if ($key == "sil_cat") {
-					// $site_url .= $key."=".$result->id."&";
-				} else
-					$site_url .= $key."=".$value."&";
-			}
-		} else
-			$site_url = $_SERVER['PHP_SELF'];
-		if (!$category)
-	   	$catHtml .= '<option value="'.$site_url.'">'.__('Choose a category', 'sil_rss').'</option>'."\n";
-   	else
-			$catHtml .= '<option value="'.$site_url.'">'.__('All', 'sil_rss').'</option>'."\n";
+		if (get_option('sil_rss_show_categories') == "1") {
+			$sql = "SELECT * FROM ".SIL_RSS_TABLE_CATEGORIES;
+	   	$catHtml = '<div id="sil_navigation">'."\n";
+	   	$catHtml .= '<div id="sil_cat_list">'."\n";
+			$catHtml .= '<select name="sil_categories" id="sil_categories"
+			 onchange="location.href=document.getElementById(\'sil_categories\').options[selectedIndex].value">'."\n";
+			$results = $wpdb->get_results($sql);
+			if (strpos($_SERVER["REQUEST_URI"], "?")) {
+				$site_url = $_SERVER['PHP_SELF']."?";
+				foreach ($_GET as $key => $value) {
+					if ($key == "sil_cat") {
+						// $site_url .= $key."=".$result->id."&";
+					} else
+						$site_url .= $key."=".$value."&";
+				}
+			} else
+				$site_url = $_SERVER['PHP_SELF'];
+			if (!$category)
+	   		$catHtml .= '<option value="'.$site_url.'">'.__('Choose a category', 'sil_rss').'</option>'."\n";
+	   	else
+				$catHtml .= '<option value="'.$site_url.'">'.__('All', 'sil_rss').'</option>'."\n";
 		foreach($results as $result)
 		{
 			if ($category == $result->id) {
@@ -1497,18 +1511,21 @@ function sil_rss_show($total = 0, $to_show = "content", $category = 0, $html_pre
 				// $site_url = $_SERVER["REQUEST_URI"]."&";
 			} else
 				$site_url = $_SERVER['PHP_SELF']."?sil_cat=".$result->id;
-    	$catHtml .= '<option value="'.$site_url.'"'.$selected.'>'.$result->category.'</option>'."\n";
+    		$catHtml .= '<option value="'.$site_url.'"'.$selected.'>'.$result->category.'</option>'."\n";
 		}
-		$catHtml .= '</select>'."\n";
-   	$catHtml .= '</div>'."\n";
-		
-   	$catHtml .= '<div id="sil_cat_rss">'."\n";
-   	if ($category)
-	   	$catHtml .= '<a href="'.$_SERVER['PHP_SELF'].'?feed=external&sil_cat='.$category.'"><img src="'.SIL_RSS_URL.'images/rss/feed-icon-12x12.png" alt="RSS '.$category_name.'" /> RSS '.$category_name.'</a> - ';
-   	$catHtml .= '<a href="'.$_SERVER['PHP_SELF'].'?feed=external"><img src="'.SIL_RSS_URL.'images/rss/feed-icon-12x12.png" alt="RSS General" /> RSS General</a>';
-   	$catHtml .= '</div>'."\n";
-   	$catHtml .= '</div>'."\n";
-		$catHtml .= '<br style="clear:both;" />'."\n";
+			$catHtml .= '</select>'."\n";
+   		$catHtml .= '</div>'."\n";
+   	} // end if option
+
+		if (get_option('sil_rss_show_feed_url') == "1") {
+		   	$catHtml .= '<div id="sil_cat_rss">'."\n";
+	   	if ($category)
+		   	$catHtml .= '<a href="'.$_SERVER['PHP_SELF'].'?feed=external&sil_cat='.$category.'"><img src="'.SIL_RSS_URL.'images/rss/feed-icon-12x12.png" alt="RSS '.$category_name.'" /> RSS '.$category_name.'</a> - ';
+   		$catHtml .= '<a href="'.$_SERVER['PHP_SELF'].'?feed=external"><img src="'.SIL_RSS_URL.'images/rss/feed-icon-12x12.png" alt="RSS General" /> RSS General</a>';
+   		$catHtml .= '</div>'."\n";
+   		$catHtml .= '</div>'."\n";
+			$catHtml .= '<br style="clear:both;" />'."\n";
+		}
 	}
 
 	/*
@@ -1552,10 +1569,13 @@ function sil_rss_show($total = 0, $to_show = "content", $category = 0, $html_pre
 	// $rss->strip_htmltags(array_merge($rss->strip_htmltags, array('h1', 'a', 'img', 'div', 'p', 'pre', 'ol', 'ul', 'li')));
 	$rss->strip_htmltags(false);
 
-	if ($category)
+	if ($category && $to_show == "content")
 		$sql = "select r.* from " . SIL_RSS_TABLE_SITES . " r, " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " c where r.id = c.rss_id and c.category_id = '" . (int)$category . "';";
 	else
-		$sql = "SELECT * FROM " . SIL_RSS_TABLE_SITES;
+		if ($to_show == "feed")
+			$sql = "SELECT * FROM " . SIL_RSS_TABLE_SITES . " where id = '" . (int)$category . "'";
+		else
+			$sql = "SELECT * FROM " . SIL_RSS_TABLE_SITES;
 
 	$results = $wpdb->get_results($sql);
 	$tot = 0;

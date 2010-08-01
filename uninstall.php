@@ -15,6 +15,8 @@ delete_option('sil_rss_image_size_h');
 delete_option('sil_rss_image_size_w');
 delete_option('sil_rss_version');
 delete_option('sil_rss_use_cache');
+delete_option('sil_rss_show_categories');
+delete_option('sil_rss_show_feed_url');
 
 // Widget
 delete_option('sil_rss_widget_title');
