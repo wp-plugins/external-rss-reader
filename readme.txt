@@ -27,9 +27,9 @@ Add it on a page:
   With feed option, it uses this parameter to know the feed. 
 
 Sample:
-[sil_rss:5:widget:1] - Show 5 items of category 1 like widget.
-[sil_rss:0:feed:1] - Show items on options from site 1.
 [sil_rss:20:content:0] - Show 20 items from all sites.
+[sil_rss:5:widget:1] - Show 5 items of category 1 like widget.
+[sil_rss:0:feed:1] - Show number of items defined on options from site 1.
 
 Call function:
 To show the list calling a function, use:
