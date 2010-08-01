@@ -1569,7 +1569,7 @@ function sil_rss_show($total = 0, $to_show = "content", $category = 0, $html_pre
 	// $rss->strip_htmltags(array_merge($rss->strip_htmltags, array('h1', 'a', 'img', 'div', 'p', 'pre', 'ol', 'ul', 'li')));
 	$rss->strip_htmltags(false);
 
-	if ($category && $to_show == "content")
+	if ($category && $to_show != "feed")
 		$sql = "select r.* from " . SIL_RSS_TABLE_SITES . " r, " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " c where r.id = c.rss_id and c.category_id = '" . (int)$category . "';";
 	else
 		if ($to_show == "feed")
