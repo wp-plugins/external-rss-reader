@@ -29,7 +29,8 @@ Author URI: http://byronh.axul.net
 
 define('SIL_RSS_VERSION', '0.4');
 define('SIL_RSS_PLUGINDIR', dirname(__FILE__));
-define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/sil_rss_reader/');
+// define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/sil_rss_reader/');
+define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/'.basename(dirname(__FILE__)).'/');
 
 define('SIL_RSS_TABLE_SITES', $wpdb->prefix . "sil_rss");
 define('SIL_RSS_TABLE_CATEGORIES', $wpdb->prefix . "sil_rss_categories");
@@ -257,6 +258,13 @@ if (isset($_POST['submitted']) && !empty($_POST['submitted']))
 </select></td>
 </tr>
 <tr valign="top">
+<th scope="row"><?php _e('Public OPML', 'sil_rss'); ?>:</th>
+<td><select name="sil_rss_public_opml">
+<option value="1"<?php if (get_option('sil_rss_public_opml') == '1') echo ' selected="selected"'; ?>>Yes</option>
+<option value="0"<?php if (get_option('sil_rss_public_opml') == '0') echo ' selected="selected"'; ?>>No</option>
+</select></td>
+</tr>
+<tr valign="top">
 <th scope="row"><?php _e('Date format', 'sil_rss'); ?>:</th>
 <td><input type="text" name="sil_rss_date_format" value="<?php echo get_option('sil_rss_date_format'); ?>" /></td>
 </tr>
@@ -406,7 +414,9 @@ if (isset($_POST['action_cat']) && !empty($_POST['action_cat']))
 function sil_rss_save_category_items() {
 	global $wpdb;
 
-$sql = "select * from " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " where category_id = " . (int)$_GET["edit_cat"];
+	// save categories at cat page
+	if (isset($_GET['edit_cat']) && !empty($_GET['edit_cat'])) {
+		$sql = "select * from " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " where category_id = " . (int)$_GET["edit_cat"];
 
 	$results = $wpdb->get_results($sql);
 	foreach($results as $result)
@@ -444,8 +454,54 @@ $sql = "select * from " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " where category_id 
 	if ( !function_exists('wp_redirect') ) {
 		include_once("../wp-includes/pluggable.php");
 	}
-	wp_redirect('admin.php?page=sil_rss_manage_categories_page');
-	exit;
+		wp_redirect('admin.php?page=sil_rss_manage_categories_page');
+		exit;
+	}
+
+	// save categories at post page
+	if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+		$sql = "select * from " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " where rss_id = " . (int)$_GET["edit"];
+
+	$results = $wpdb->get_results($sql);
+	foreach($results as $result)
+	{
+		$delete = true;
+		foreach ($_POST["right_cat"] as $keyC => $valueC) {
+			if ($result->category_id == $valueC) $delete = false;
+		}
+		if ($delete) {
+			$sql = "delete from ". SIL_RSS_TABLE_SITES_BY_CATEGORY .
+			" where id = '" . $result->id . "';";
+			$wpdb->query($sql);
+		}
+	}
+	
+	$sql = "";
+	foreach ($_POST["right_cat"] as $keyC => $valueC) {
+		$insert = true;
+		foreach($results as $result)
+		{
+			if ($result->category_id == $valueC) $insert = false;
+		}
+		if ($insert) {
+			if (strlen($sql)) $sql .= ", ";
+			$sql .= "('".(int)$_GET["edit"]."', '".$valueC."')";
+		}
+	}
+	if (strlen($sql)) {
+			$sql = "INSERT INTO " . SIL_RSS_TABLE_SITES_BY_CATEGORY .
+			" (rss_id, category_id) 
+			VALUES " . $sql;
+			$wpdb->query($sql);
+	}
+	
+	if ( !function_exists('wp_redirect') ) {
+		include_once("../wp-includes/pluggable.php");
+	}
+		wp_redirect('admin.php?page=sil_rss_manage_page');
+		exit;
+	}
+
 }
 
 if (isset($_POST['action_cat_val']) && !empty($_POST['action_cat_val']))
@@ -552,6 +608,101 @@ if ($_GET["ok"] == 1)
 
 </form>
 <?php
+
+	if (isset($_GET['edit']) && !empty($_GET['edit'])) {
+
+?>
+<script type="text/javascript">
+	// Move options between Select Menus with Javascript
+	// June 6, 2008 7:58 PM | Adrian J. Moreno
+	// http://www.iknowkungfoo.com/blog/index.cfm/2008/6/6/Move-options-between-Select-Menus
+function moveOption( fromID, toID, idx )
+{   
+   if (isNaN(parseInt(idx)))
+   {
+      var i = document.getElementById( fromID ).selectedIndex;
+   }
+   else
+   {
+      var i = idx;
+   }
+
+   var o = document.getElementById( fromID ).options[ i ];
+   var theOpt = new Option( o.text, o.value, false, false );
+   document.getElementById( toID ).options[document.getElementById( toID ).options.length] = theOpt;
+   document.getElementById( fromID ).options[ i ] = null;
+}
+function moveOptions( fromID, toID )
+{
+   for (var x = document.getElementById( fromID ).options.length - 1; x >= 0 ; x--)
+   {
+      if (document.getElementById( fromID ).options[x].selected == true)
+      {
+         moveOption( fromID, toID, x );
+      }
+   }
+}
+function doSubmit( leftID, rightID )
+{
+   for (var x = document.getElementById( leftID ).options.length - 1; x >= 0 ; x--)
+   {
+   	document.getElementById( leftID ).options[x].selected = true;
+   }
+   for (var x = document.getElementById( rightID ).options.length - 1; x >= 0 ; x--)
+   {
+   	document.getElementById( rightID ).options[x].selected = true;
+   }
+}
+</script>
+<br /><br />
+<h2>RSS Reader - <?php _e('Category items', 'sil_rss'); ?></h2>
+<form method="post" action="" onSubmit="doSubmit('left_cat','right_cat');">
+<table class="form-table">
+   <tr>
+      <td width="40%">
+         <select id="left_cat" name="left_cat[]" multiple="multiple" size="6" style="height: auto;">
+<?php
+$sql = "select r.* from " . SIL_RSS_TABLE_CATEGORIES . " r left join " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " c on r.id = c.category_id and c.rss_id = '" . (int)$_GET['edit'] . "' where c.category_id is null;";
+$results = $wpdb->get_results($sql);
+foreach($results as $result)
+{
+?>
+            <option value="<?php echo $result->id; ?>"><?php echo $result->category; ?></option>
+<?php
+}
+?>
+         </select>
+      </td>
+      <td valign="middle" width="20%">
+         <p><input type="button" id="moveRight2" value="&gt;" onclick="moveOptions('left_cat','right_cat')"></p>
+         <p><input type="button" id="moveLeft2" value="&lt;" onclick="moveOptions('right_cat','left_cat')"></p>
+      </td>
+      <td width="40%">
+         <select id="right_cat" name="right_cat[]" multiple="multiple" size="6" style="height: auto;">
+<?php
+$sql = "select r.* from " . SIL_RSS_TABLE_CATEGORIES . " r, " . SIL_RSS_TABLE_SITES_BY_CATEGORY . " c where r.id = c.category_id and c.rss_id = '" . (int)$_GET['edit'] . "';";
+$results = $wpdb->get_results($sql);
+foreach($results as $result)
+{
+?>
+            <option value="<?php echo $result->id; ?>"><?php echo $result->category; ?></option>
+<?php
+}
+?>
+         </select>
+      </td>
+   </tr>
+</table>
+
+<input type="hidden" name="action_cat_val" value="update" />
+
+<p class="submit">
+<input type="submit" name="Submit" value="<?php _e('Save Changes'); ?>" />
+</p>
+
+</form>
+<?php
+	}
 }
 
 function sil_rss_manage_page() {
@@ -1262,7 +1413,13 @@ if ($_GET["ok"] == 1)
 <th scope="row"><?php _e('Date Created', 'sil_rss'); ?>:</th>
 <td><input type="text" name="sil_rss_opml_date" value="<?php echo get_option('sil_rss_opml_date'); ?>" /></td>
 </tr>
-
+<tr valign="top">
+<th scope="row"><?php _e('Public OPML', 'sil_rss'); ?>:</th>
+<td><select name="sil_rss_public_opml">
+<option value="1"<?php if (get_option('sil_rss_public_opml') == '1') echo ' selected="selected"'; ?>>Yes</option>
+<option value="0"<?php if (get_option('sil_rss_public_opml') == '0') echo ' selected="selected"'; ?>>No</option>
+</select></td>
+</tr>
 </table>
 
 <input type="hidden" name="action" value="update" />
@@ -1361,6 +1518,8 @@ function sil_rss_show_opml($category) {
 	global $wpdb;
 	$sil_rss_table_name = $wpdb->prefix . "sil_rss";
 
+	if (get_option('sil_rss_public_opml') == '0') return;
+	
 	header('Content-Type: text/xml; charset='.get_option('blog_charset'), true);
 echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\" ?>";
 ?>
@@ -1434,7 +1593,8 @@ exit();
 function sil_rss_init() {
 	add_feed('external', 'sil_rss_show_feed');
 	// add_feed('sil_opml', 'sil_rss_show_opml');
-  load_plugin_textdomain('sil_rss', 'wp-content/plugins/sil_rss_reader/lang');
+	// load_plugin_textdomain('sil_rss', 'wp-content/plugins/sil_rss_reader/lang');
+	load_plugin_textdomain('sil_rss', 'wp-content/plugins/'.basename(dirname(__FILE__)).'/lang');
 }
 
 add_action('init','sil_rss_init');
@@ -1808,7 +1968,7 @@ function sil_rss_resize_image($img, $w, $h, $newfilename) {
 		case 3: $im = imagecreatefrompng($img); break;
 		default:  trigger_error('Unsupported filetype!', E_USER_WARNING);  break;
 	}
-echo "go...";
+// echo "go...";
 	//If image dimension is smaller, do not resize
 	// if ($imgInfo[0] <= $w && $imgInfo[1] <= $h) {
 	if ($imgInfo[0] < $w && $imgInfo[1] < $h) {
