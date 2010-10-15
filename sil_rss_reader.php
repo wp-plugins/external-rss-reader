@@ -3,7 +3,7 @@
 Plugin Name: Silencesoft RSS Reader
 Plugin URI: http://www.silencesoft.net
 Description: A plugin to read external rss feeds
-Version: 0.4
+Version: 0.5
 Author: Byron Herrera
 Author URI: http://byronh.axul.net
 
@@ -27,7 +27,7 @@ Author URI: http://byronh.axul.net
 // if ( function_exists('current_user_can') && !current_user_can('manage_options') ) die(__('Error.'));
 // if (! user_can_access_admin_page()) wp_die( __('You do not have sufficient permissions to access this page.') );
 
-define('SIL_RSS_VERSION', '0.4');
+define('SIL_RSS_VERSION', '0.5');
 define('SIL_RSS_PLUGINDIR', dirname(__FILE__));
 // define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/sil_rss_reader/');
 define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/'.basename(dirname(__FILE__)).'/');
