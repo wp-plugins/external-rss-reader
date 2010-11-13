@@ -5,7 +5,7 @@ Donate link: http://www.silencesoft.net/
 Tags: rss reader, external feed, rss
 Requires at least: 2.0.2
 Tested up to: 3.0.1
-Stable tag: 0.5
+Stable tag: 0.6
 
 A plugin to read external rss feeds
 
@@ -64,7 +64,11 @@ Change Options as necesary.
 
 == Changelog ==
 
+= 0.6 =
+* Fixed to use multiple categories on one page.
+
 = 0.5 =
+* Deleted some styles.
 * Fixed plugin path.
 * Added option to edit item categories.
 * Added public opml option

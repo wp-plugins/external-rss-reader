@@ -3,7 +3,7 @@
 Plugin Name: Silencesoft RSS Reader
 Plugin URI: http://www.silencesoft.net
 Description: A plugin to read external rss feeds
-Version: 0.5
+Version: 0.6
 Author: Byron Herrera
 Author URI: http://byronh.axul.net
 
@@ -27,7 +27,7 @@ Author URI: http://byronh.axul.net
 // if ( function_exists('current_user_can') && !current_user_can('manage_options') ) die(__('Error.'));
 // if (! user_can_access_admin_page()) wp_die( __('You do not have sufficient permissions to access this page.') );
 
-define('SIL_RSS_VERSION', '0.5');
+define('SIL_RSS_VERSION', '0.6');
 define('SIL_RSS_PLUGINDIR', dirname(__FILE__));
 // define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/sil_rss_reader/');
 define('SIL_RSS_URL', get_bloginfo('wpurl') . '/wp-content/plugins/'.basename(dirname(__FILE__)).'/');
@@ -200,13 +200,16 @@ function sil_rss_update() {
 	$sil_rss_actual = get_option("sil_rss_version");
 	if( $sil_rss_actual == SIL_RSS_VERSION) return;
 
+	update_option("sil_rss_version", SIL_RSS_VERSION);
+
+	if( $sil_rss_actual != "0.3") return;
+
 	if ( !function_exists('dbDelta') ) {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 	}
 
 	add_option("sil_rss_show_categories", 1, 'no');
 	add_option("sil_rss_show_feed_url", 1, 'no');
-	update_option("sil_rss_version", SIL_RSS_VERSION);
 }
 
 add_action('admin_menu', 'sil_rss_update');
@@ -585,7 +588,7 @@ if ($_GET["ok"] == 1)
 </tr>
 <tr valign="top">
 <th scope="row"><?php _e('Image', 'sil_rss'); ?></th>
-<td><input name="image" type="file" /><?php if (strlen($result[image])) { ?><img src="<?php echo SIL_RSS_URL.'images/'.$result[image]; ?>" width="30" height="30" /><?php } ?></td>
+<td><input name="image" type="file" /><?php if (strlen($result[image])) { ?><img src="<?php echo SIL_RSS_URL.'images/'.$result[image]; ?>" width="30" height="40" /><?php } ?></td>
 </tr>
 <tr valign="top">
 <th scope="row"><?php _e('Gravatar', 'sil_rss'); ?></th>
@@ -745,7 +748,7 @@ foreach($results as $result)
 				  <tr id='rss-<?php echo $result->id; ?>' class='alternate'>
 						<th scope="row" class="check-column"><input type="checkbox" name="eventcheck[]" value="<?php echo $event->id; ?>" /></th>
 						<td><?php echo $result->id; ?></td>
-						<td><?php if (strlen($result->image)) { ?><img src="<?php echo SIL_RSS_URL.'images/'.$result->image; ?>" width="30" height="30" /><?php } 
+						<td><?php if (strlen($result->image)) { ?><img src="<?php echo SIL_RSS_URL.'images/'.$result->image; ?>" width="30" height="40" /><?php } 
 						elseif (strlen($result->gravatar)) { ?><?php echo get_avatar($result->gravatar, '30') ?><?php } ?></td>
 						<td><?php echo $result->name; ?></td>
 						<td><?php echo $result->link; ?></td>
@@ -1791,7 +1794,7 @@ function sil_rss_show($total = 0, $to_show = "content", $category = 0, $html_pre
 						$link[$tot] = $item->get_permalink();
 						$content[$tot] = $item->get_content();
 						$content[$tot] = strip_tags($content[$tot]);
-						$content[$tot] = substr($content[$tot], 0, 250);
+						$content[$tot] = substr($content[$tot], 0, 200);
 						$blog[$tot] = $result->name;
 						$author[$tot] = $result->author;
 						$description[$tot] = $result->description;
@@ -1837,7 +1840,7 @@ echo "</pre>";
 	{
 		if ($title[$i] != "") {
 			if (strlen($image[$i]))
-				$sImage = '<a href="'.$url[$i].'"><img src="'.SIL_RSS_URL.'images/'.$image[$i].'" style="float:left; margin-right:5px" width="'.(int)get_option('sil_rss_image_size_w').'" height="'.(int)get_option('sil_rss_image_size_h').'" alt="' . $blog[$i] . '" /></a>';
+				$sImage = '<a href="'.$url[$i].'"><img src="'.SIL_RSS_URL.'images/'.$image[$i].'" width="'.(int)get_option('sil_rss_image_size_w').'" height="'.(int)get_option('sil_rss_image_size_h').'" alt="' . $blog[$i] . '" /></a>';
 			elseif (strlen($gravatar[$i])) 
 				$sImage = '<a href="'.$url[$i].'">'.get_avatar($gravatar[$i], (int)get_option('sil_rss_image_size_w')).'</a>';
 			else
@@ -1907,7 +1910,7 @@ EOF;
 	for($i=0;$i<sizeof($blog);$i++)
 	{
 			if (strlen($image[$i]))
-				$sImage = '<a href="'.$url[$i].'"><img src="'.SIL_RSS_URL.'images/'.$image[$i].'" style="float:left; margin-right:5px" width="'.(int)get_option('sil_rss_image_size_w').'" height="'.(int)get_option('sil_rss_image_size_h').'" alt="' . $blog[$i] . '" /></a>';
+				$sImage = '<a href="'.$url[$i].'"><img src="'.SIL_RSS_URL.'images/'.$image[$i].'" width="'.(int)get_option('sil_rss_image_size_w').'" height="'.(int)get_option('sil_rss_image_size_h').'" alt="' . $blog[$i] . '" /></a>';
 			elseif (strlen($gravatar[$i])) 
 				$sImage = '<a href="'.$url[$i].'">'.get_avatar($gravatar[$i], (int)get_option('sil_rss_image_size_w')).'</a>';
 			else
@@ -1935,10 +1938,12 @@ echo "<pre>";
 	$str = '[sil_rss]';
 	if (strpos($text, $str))
 		$text = str_replace($str, sil_rss_show(), $text);
-	if (preg_match('/\[sil_rss:(.*?)\]/', $text, $match)) {
+	while (preg_match('/\[sil_rss:(.*?)\]/', $text, $match)) {
 		// [sil_rss:0:content:1]
 		list($total, $show, $cat) = split(":", $match[1]);
-		$text = preg_replace('/\[sil_rss:(.*?)\]/', sil_rss_show($total, $show, $cat), $text);
+		// $text = preg_replace('/\[sil_rss:(.*?)\]/', sil_rss_show($total, $show, $cat), $text);
+		$line = "/\[sil_rss:$total:$show:$cat]/";
+		$text = preg_replace($line, sil_rss_show($total, $show, $cat), $text);
 	}
 	$str = '[sil_rss_list_blogs]';
 	if (strpos($text, $str))
